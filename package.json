@@ -1,0 +1,20 @@
+{
+  "name": "chenw-personal-blog",
+  "version": "1.0.0",
+  "description": "restful api",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "server": "nodemon server.js"
+  },
+  "author": "陈文",
+  "license": "ISC",
+  "dependencies": {
+    "gravatar": "^1.6.0",
+    "koa": "^2.5.3",
+    "koa-bodyparser": "^4.2.1",
+    "koa-router": "^7.4.0",
+    "mongoose": "^5.2.17",
+    "nodemon": "^1.18.4"
+  }
+}
