@@ -43,13 +43,11 @@ const ArticleSchema = new Schema({
     // 文章评论
     comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'comments', required: true }],
 
-    // 点赞的用户
+    // 点赞的用户,只存储email
     likes:[
         {
-            user:{
-                type:Schema.Types.ObjectId,
-                ref: "users"
-            }
+            type: String,
+            required: true
         }
     ],
 

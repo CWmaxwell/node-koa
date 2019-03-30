@@ -17,6 +17,7 @@ const CommentSchema = new Schema({
         name: { type: String, required: true },
         email: { type: String, required: true },
         avatar: { type: String, required: true },
+        is_admin: { type: Boolean, default: false },
     },
     
     // 评论内容
@@ -28,7 +29,8 @@ const CommentSchema = new Schema({
     // 被赞数
     likes: [
         {
-            email: { type: String }
+            type: String,
+            required: true
         }
     ],
 

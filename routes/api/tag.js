@@ -62,9 +62,9 @@ router.get("/:id", async (ctx, next) => {
 /**
  * $route DELETE api/tag?tag_id=number
  * @desc  删除某个标签
- * @access 接口是私有的
+ * @access private
  */ 
-router.delete("/", async (ctx, next) => {
+router.delete("/", passport.authenticate('jwt', { session: false }), async (ctx, next) => {
     // 拿到id
     const tag_id = ctx.query.tag_id;
     // 查询

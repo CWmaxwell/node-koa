@@ -15,6 +15,8 @@ router.get("/", async (ctx, next) => {
                 id: value._id,
                 title: value.title,
                 desc: value.desc,
+                author: value.author,
+                keyword: value.keyword,
                 create_time: value.create_time,
                 meta: value.meta,
             }))
@@ -38,6 +40,8 @@ router.get("/code", async (ctx, next) => {
                 id: value._id,
                 title: value.title,
                 desc: value.desc,
+                author: value.author,
+                keyword: value.keyword,
                 create_time: value.create_time,
                 meta: value.meta,
            }))
@@ -60,6 +64,8 @@ router.get("/game", async (ctx, next) => {
                 id: value._id,
                 title: value.title,
                 desc: value.desc,
+                author: value.author,
+                keyword: value.keyword,
                 create_time: value.create_time,
                 meta: value.meta,
            }))
@@ -82,6 +88,8 @@ router.get("/other", async (ctx, next) => {
                 id: value._id,
                 title: value.title,
                 desc: value.desc,
+                author: value.author,
+                keyword: value.keyword,
                 create_time: value.create_time,
                 meta: value.meta,
            }))
@@ -90,6 +98,31 @@ router.get("/other", async (ctx, next) => {
        })
        .catch(err => {ctx.response.body = err});
 });
+
+/**
+ * $route GET api/article/search/:keyword
+ * @desc 搜索包含关键词的文章
+ * @access public
+ */
+router.get("/search/:keyword", async (ctx, next) => {
+    const reg = new RegExp(ctx.params.keyword, 'i') //不区分大小写
+    await Article.find({$or:[{title : {$regex : reg}}]})
+        .sort({create_time: -1})
+        .then(articles => {
+            const articleList = articles.map((value, index) => ({
+                    id: value._id,
+                    title: value.title,
+                    desc: value.desc,
+                    author: value.author,
+                    keyword: value.keyword,
+                    create_time: value.create_time,
+                    meta: value.meta,
+            }))
+            ctx.response.type = 'json';
+            ctx.response.body = { code: 200, data: { list: articleList, count: articleList.length}};
+        })
+        .catch(err => {ctx.response.body = err});
+})
 
 /**
  * $route GET api/article/tag/:id
@@ -104,6 +137,8 @@ router.get("/tag/:id", async (ctx, next) => {
                         id: value._id,
                         title: value.title,
                         desc: value.desc,
+                        author: value.author,
+                        keyword: value.keyword,
                         create_time: value.create_time,
                         meta: value.meta,
                     }))
@@ -114,27 +149,54 @@ router.get("/tag/:id", async (ctx, next) => {
 })
 
 /**
+ * $route POST api/article/like/:id
+ * @desc 文章点赞
+ * @access public 
+ */
+router.post("/like/:id", async (ctx, next) => {
+    const body = ctx.request.body;
+    ctx.response.type = 'json';
+    const article = await Article.findById(ctx.params.id);
+    if (article) {
+        if (article.likes.indexOf(body.email) !== -1) {
+            ctx.status = 400;
+            ctx.body = { alreadyLiked: '该用户已赞过'};
+            return;
+        }
+        article.likes.unshift(body.email);
+        article.meta.likes = article.likes.length;
+        const articleUpdate = await Article.findOneAndUpdate({_id: ctx.params.id}, {$set: article}, {new: true});
+        ctx.body = {code: 200, data: articleUpdate};
+    } else {
+        ctx.status = 404;
+        ctx.body = { error: 'article不存在'};
+    }
+   
+})
+
+/**
  * $route  GET api/article/:id
  * @desc   获取单个文章详情
  * @access public
  */
 router.get("/:id", async (ctx, next) => {
     // let article;
-    await Article.findById(ctx.params.id)
-           .populate({path: 'tags', model: Tag})
-           .exec()
-           .then(article => {
+    await Article.findByIdAndUpdate(ctx.params.id, {$inc:{"meta.views":1}}, {new: true})
+            .populate({path: 'tags', model:Tag})
+            .exec()
+            .then(article => {
                 ctx.response.type = 'json';
                 ctx.body = { code: 200, data: article};
            })
            .catch(err => ctx.body = err);
-    // // return Article.findById(ctx.params.id)
-    // //     .then(article => {
-    // //         console.log('hhha');
-    // //         ctx.response.type = 'json';
-    // //         ctx.body = { code: 200, data: article};
-    // //     })
-    // //     .catch(err => ctx.body = err);
+    // await Article.findById(ctx.params.id)
+    //        .populate({path: 'tags', model: Tag})
+    //        .exec()
+    //        .then(article => {
+    //             ctx.response.type = 'json';
+    //             ctx.body = { code: 200, data: article};
+    //        })
+    //        .catch(err => ctx.body = err);
 });
 
 /**
@@ -154,30 +216,6 @@ router.get("/test/1", async (ctx, next) => {
 });
 
 
-/**
- * $route  POST api/article
- * @desc   post新文章上去
- * @access private
- */
-router.post("/", async (ctx, next) => {
-    const body = ctx.request.body;
-    const newArticle = new Article({
-        title: body.title,
-        author: body.author,
-        content: body.content,
-        tags: body.tag,
-        category: body.category,
-        state: body.state,
-        numbers: body.content.length,
-    })
-    /** 这里待测试，标签选择将自++ */
-    body.tag.map((id, index) => {
-        Tag.where({_id: id}).update({$inc: {articleCount: 1}});
-    })
-    return newArticle.save().then(article => {
-            ctx.response.body = article
-        })
-        .catch(err => {ctx.body = err});
-});
+
 
 module.exports = router.routes();
