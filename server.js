@@ -20,7 +20,10 @@ const tag = require("./routes/api/tag");
 const comment = require("./routes/api/comment");
 
 // DB config
-const db = require("./config/keys").mongoURI;
+// const db = require("./config/keys").mongoURI;
+
+const db = `mongodb://127.0.0.1:'27017'/boke`;
+
 // Connect to mongodb
 mongoose
   .connect(db, { useNewUrlParser: true })
